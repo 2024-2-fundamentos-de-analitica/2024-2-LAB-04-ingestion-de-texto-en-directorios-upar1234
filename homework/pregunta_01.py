@@ -4,9 +4,54 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
+import zipfile
+import os
+import pandas as pd
+import glob
 
+def extract_zip(input_path, extract_to):
+    """Extrae un archivo ZIP en una ubicación específica"""
+    with zipfile.ZipFile(input_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+
+def create_output_directory(output_path):
+    """Crea un directorio si no existe"""
+    os.makedirs(output_path, exist_ok=True)
+
+def generate_dataset(input_folder, output_file):
+    """Genera un dataset a partir de archivos clasificados en carpetas"""
+    data = []  # Lista para almacenar las filas del dataset
+    labels = ['negative', 'neutral', 'positive']  # Etiquetas
+
+    for label in labels:
+        file_paths = glob.glob(os.path.join(input_folder, label, '*'))
+        for file_path in file_paths:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                phrase = file.read().strip()
+                data.append([phrase, label])  # Agregar frase y etiqueta al dataset
+
+    # Convertir datos a DataFrame y guardarlo como CSV
+    df = pd.DataFrame(data, columns=['phrase', 'target'])
+    df.to_csv(output_file, index=False)
+
+    return df
 
 def pregunta_01():
+    # Extraer archivos ZIP
+    input_zip = 'files/input.zip'
+    extract_to = 'files'
+    extract_zip(input_zip, extract_to)
+
+    # Crear directorio de salida
+    output_dir = 'files/output'
+    create_output_directory(output_dir)
+
+    # Generar datasets
+    train_df = generate_dataset(os.path.join(extract_to, 'input/train'), os.path.join(output_dir, 'train_dataset.csv'))
+    test_df = generate_dataset(os.path.join(extract_to, 'input/test'), os.path.join(output_dir, 'test_dataset.csv'))
+
+    return train_df, test_df
+
     """
     La información requerida para este laboratio esta almacenada en el
     archivo "files/input.zip" ubicado en la carpeta raíz.
@@ -71,3 +116,5 @@ def pregunta_01():
 
 
     """
+if __name__ == "__main__":
+  print(pregunta_01())
